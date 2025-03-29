@@ -1,12 +1,14 @@
 package com.milhas.api.models;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
+import com.milhas.api.dtos.LoginRecordDTO;
 import jakarta.persistence.*;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import org.springframework.security.crypto.password.PasswordEncoder;
 
 import java.io.Serializable;
 import java.time.LocalDate;
@@ -69,4 +71,7 @@ public class UserModel implements Serializable {
         this.state = state;
     }
 
+    public boolean getIsLoginCorrect(LoginRecordDTO loginDTO, PasswordEncoder passwordEncoder) {
+        return passwordEncoder.matches(loginDTO.password(), this.password);
+    }
 }

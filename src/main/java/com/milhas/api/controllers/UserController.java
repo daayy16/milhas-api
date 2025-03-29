@@ -12,6 +12,7 @@ import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -34,9 +35,17 @@ public class UserController {
     @Autowired
     private UserService userService;
 
+    @Autowired
+    private BCryptPasswordEncoder passwordEncoder;
+
     @PostMapping("/create")
     public ResponseEntity<?> createUser(@RequestBody @Valid UserRecordDTO userDTO) {
+        var user = repository.findByEmail(userDTO.email());
+        if(user.isPresent()) {
+            return ResponseEntity.status(HttpStatus.CONFLICT).body("Email já cadastrado");
+        }
         StateModel state = stateRepository.findByInitials(userDTO.initials());
+
 
         if (state == null) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST)
@@ -45,11 +54,12 @@ public class UserController {
 
 
         var userModel = new UserModel();
-        BeanUtils.copyProperties(userDTO, userModel, "dateOfBirth");
+        BeanUtils.copyProperties(userDTO, userModel, "dateOfBirth", "password");
 
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
         userModel.setDateOfBirth(LocalDate.parse(userDTO.dateOfBirth(), formatter).atStartOfDay());
         userModel.setState(state);
+        userModel.setPassword(passwordEncoder.encode(userDTO.password()));
 
         return ResponseEntity.status(HttpStatus.CREATED).body(userService.save(userModel));
     }
