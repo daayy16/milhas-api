@@ -14,4 +14,8 @@ public class StateService {
     public StateModel save(StateModel state) {
         return stateRepository.save(state);
     }
+
+    public StateModel findByInitials(String initials) {
+        return stateRepository.findByInitials(initials);
+    }
 }
